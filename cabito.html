@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cabito – NFTs inspiradores UTADEO</title>
+<style>
+  :root{
+    --brand:#00558F;
+    --accent:#A0CFEB;
+    --bg:#f8fafc;
+    --card:#fff;
+    --ink:#0f172a;
+  }
+  *{box-sizing:border-box}
+  body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+  header{background:linear-gradient(90deg,var(--brand),#00A9A4);color:#fff;padding:18px}
+  header h1{margin:0;font-size:20px}
+  .wrap{padding:18px;max-width:1100px;margin:auto}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+  .card{background:var(--card);border-radius:10px;padding:12px;border:1px solid #e5e7eb;box-shadow:0 4px 8px rgba(0,0,0,.05)}
+  label{display:block;font-size:13px;margin-top:8px;color:#555}
+  input[type="text"],textarea,select{width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;margin-top:6px}
+  textarea{min-height:80px}
+  .btn{display:inline-block;padding:8px 12px;border-radius:8px;border:0;background:var(--brand);color:#fff;cursor:pointer;margin-top:8px}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .nft{border-radius:8px;padding:8px;border:1px solid #e5e7eb;background:#fff;display:flex;flex-direction:column;gap:6px}
+  .nft img{border-radius:6px;max-height:160px;object-fit:contain;background:#fff}
+  .small{font-size:12px;color:#555}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Cabito – NFTs inspiradores UTADEO</h1>
+  <p class="small">Simulación educativa local: crea NFTs inspiradores de Cabito. 100 % offline.</p>
+</div></header>
+
+<div class="wrap">
+<div class="grid">
+  <div class="card">
+    <h3>Mintear nuevo Cabito</h3>
+    <label>Título</label>
+    <input id="title" type="text" placeholder="Cabito edición especial">
+    <label>Frase inspiradora</label>
+    <select id="phraseSel"></select>
+    <textarea id="phraseTxt" placeholder="O escribe tu propia frase..."></textarea>
+    <label>Imagen (opcional)</label>
+    <input id="imgFile" type="file" accept="image/*">
+    <button class="btn" id="mintBtn">Mintear NFT</button>
+    <button class="btn ghost" id="resetBtn">Reset</button>
+  </div>
+
+  <div class="card">
+    <h3>Galería de Cabitos</h3>
+    <div id="gallery" class="gallery"></div>
+  </div>
+</div>
+</div>
+
+<script>
+// --- Frases base ---
+const SEED=[
+ "Nunca pares de explorar: el conocimiento abre mundos.",
+ "Paso a paso se construyen los sueños universitarios.",
+ "Curiosidad hoy, innovación mañana — con Cabito a tu lado.",
+ "Aprender es el superpoder que nadie te puede quitar.",
+ "Cree en tus ideas, prototípalas y compártelas.",
+ "La colaboración transforma proyectos en legado.",
+ "Equivocarse es experimentar: ajusta, vuelve y mejora.",
+ "Haz visible lo invisible: investiga, documenta, publica."
+];
+
+// --- Imagen por defecto (tu Cabito embebido) ---
+const DEFAULT_CABITO_IMG = "data:image/png;base64,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";
+
+// --- Estado ---
+const KEY="cabito_nfts_v1";
+let nfts=[];
+function load(){const r=localStorage.getItem(KEY);if(r)nfts=JSON.parse(r);}
+function save(){localStorage.setItem(KEY,JSON.stringify(nfts));}
+
+// --- Helpers ---
+function uuid(){return([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));}
+async function sha256(str){const d=new TextEncoder().encode(str);const h=await crypto.subtle.digest("SHA-256",d);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");}
+function fileToDataURL(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej();r.readAsDataURL(f);});}
+
+// --- UI ---
+const phraseSel=document.getElementById("phraseSel");
+const phraseTxt=document.getElementById("phraseTxt");
+SEED.forEach((p,i)=>{const o=document.createElement("option");o.textContent=p;o.value=p;phraseSel.appendChild(o);});
+phraseSel.addEventListener("change",()=>phraseTxt.value=phraseSel.value);
+
+document.getElementById("mintBtn").onclick=async()=>{
+ const title=document.getElementById("title").value||"Cabito edición local";
+ const phrase=phraseTxt.value.trim();
+ let img=DEFAULT_CABITO_IMG;
+ const f=document.getElementById("imgFile").files[0];
+ if(f) img=await fileToDataURL(f);
+ const id="CAB-"+Math.random().toString(36).slice(2,7).toUpperCase();
+ const obj={id,uuid:uuid(),title,phrase,img,ts:new Date().toISOString()};
+ obj.hash=await sha256(JSON.stringify(obj));
+ nfts.push(obj);save();render();
+};
+
+document.getElementById("resetBtn").onclick=()=>{if(confirm("Borrar colección local?")){nfts=[];save();render();}};
+
+// --- Render ---
+function render(){
+ const g=document.getElementById("gallery");
+ g.innerHTML=nfts.slice().reverse().map(n=>`
+  <div class='nft'>
+    <img src='${n.img}' alt='${n.title}'/>
+    <div><b>${n.title}</b></div>
+    <div class='small'>${n.phrase}</div>
+    <div class='small mono'>${n.hash.slice(0,16)}...</div>
+  </div>`).join("")||"<p class='small'>Aún no hay NFTs.</p>";
+}
+
+// Go
+load();render();
+</script>
+</body>
+</html>
